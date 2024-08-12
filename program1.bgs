@@ -1,0 +1,25 @@
+int num = 100000
+
+
+
+
+loop:
+
+num = num - 2
+
+si num > 0 loop
+si num = 0 even
+
+afficher 'Le chiffre est impaire !'
+
+stop
+
+si num > 0 loop
+
+even:
+afficher 'Le chiffre est paire !'
+stop
+
+
+
+stop
