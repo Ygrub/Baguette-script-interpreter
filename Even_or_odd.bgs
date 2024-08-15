@@ -1,0 +1,25 @@
+lire int input_num
+
+int num = input_num
+
+
+loop:
+
+num = num - 2
+
+si num > 0 loop
+si num = 0 even
+
+afficher 'Le chiffre $input_num  est impaire !'
+
+stop
+
+si num > 0 loop
+
+even:
+afficher 'Le chiffre $input_num est paire !'
+stop
+
+
+
+stop

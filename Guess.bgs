@@ -1,0 +1,29 @@
+int secret_num = 7
+
+afficher 'Find the secret number !'
+
+loop
+
+loop:
+lire int player_num
+si player_num > secret_num over
+si player_num < secret_num under
+si player_num = secret_num win
+
+
+under:
+afficher 'Trop petit'
+si 1 = 1 loop
+stop
+
+over:
+afficher 'Trop grand !'
+si 1 = 1 loop
+stop
+
+win:
+afficher 'Bravo !'
+stop
+
+
+stop

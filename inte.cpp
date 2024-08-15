@@ -1,189 +1,6 @@
-#include <iostream>
-#include <vector>
-#include <fstream>
-#include <cstring>
-#include <sstream>
-#include <string>
-#include <map>
-#include <stdexcept>
-#include <cctype>
-#include <stack>
-#include <chrono>
-using namespace std::chrono;
-using namespace std;
-
-bool isOperator(char c) {
-    return c == '+' || c == '-' || c == '*' || c == '/';
-}
-
-int calculate(int a, int b, char op) {
-    switch (op) {
-        case '+': return a + b;
-        case '-': return a - b;
-        case '*': return a * b;
-        case '/': return a / b; // Attention à la division par zéro
-    }
-    return 0;
-}
-
-int evaluate(string expression) {
-    stack<int> values;
-    stack<char> ops;
-    for (int i = 0; i < expression.length(); ++i) { // Declare and initialize i
-        char c = expression[i];
-        if (isdigit(c)) {
-            int num = 0;
-            while (isdigit(c)) {
-                num = num * 10 + (c - '0');
-                c = expression[++i];
-            }
-            i--;
-            values.push(num);
-        } else if (c == '(') {
-            ops.push(c);
-        } else if (c == ')') {
-            while (ops.top() != '(') {
-                int val2 = values.top();
-                values.pop();
-                int val1 = values.top();
-                values.pop();
-                char op = ops.top();
-                ops.pop();
-                values.push(calculate(val1, val2, op));
-
-            }
-            ops.pop();
-        } else if (isOperator(c)) {
-            while (!ops.empty() && ops.top() != '(' &&
-                   (c == '*' || c == '/') && (ops.top() == '*' || ops.top() == '/')) {
-                int val2 = values.top();
-                values.pop();
-                int val1 = values.top();
-                values.pop();
-                char op = ops.top();
-                ops.pop();
-                values.push(calculate(val1, val2, op));
-
-            }
-            ops.push(c);
-        }
-    }
-
-    while (!ops.empty()) {
-        int val2 = values.top();
-        values.pop();
-        int val1 = values.top();
-        values.pop();
-        char op = ops.top();
-        ops.pop();
-        values.push(calculate(val1, val2, op));
-    }
-
-    return values.top();
-
-}
+#include "basicFunc.h"
 
 
-vector<string> split(string line, const char* token = " ")
-{
-  vector<string> finnal = {};
-  string word;
-
-  for (char c : line)
-  {
-
-    if (c != *token)
-    {
-      word = word+c;
-    }
-    else
-    {
-      finnal.push_back(word);
-      word = "";
-    }
-  }
-  finnal.push_back(word);
-  return finnal;
-}
-
-int get_lt(vector<string> program_lines, string label)
-{
-  int lt = 0;
-  for (auto line : program_lines)
-  {
-    //cout << line << endl;
-    vector<string> code = split(line, " ");
-
-    if (code[0] == label + ":")
-    {
-      return lt;
-    }
-    lt++;
-  }
-}
-
-string minus_the_end(string str)
-{
-  string new_str = "";
-  for (int i =0; i<str.length()-1; i++)
-  {
-    new_str+=str[i];
-  }
-  return new_str;
-}
-
-string process_string(const vector<string>& parts)
-{
-    stringstream ss;
-    for (size_t i = 1; i < parts.size(); ++i)
-    {
-        ss << parts[i] << ' ';
-    }
-
-    string result;
-    getline(ss, result, '\0'); // Read until end-of-string
-    return result.substr(1, result.length() - 2);
-}
-
-
-string remove(const string str, const char* unwanted = "'")
-{
-  string newstr;
-  for (int i= 0; i<str.size(); i++)
-  {
-    if (str[i] != *unwanted)
-    {
-      newstr+=str[i];
-    }
-  }
-  return newstr;
-}
-
-bool is_valid_str(string str)
-{
-  int num=0;
-  for (char c : str)
-  {
-    if (c == *"'")
-    {
-      num++;
-    }
-  }
-  return num==2;
-}
-
-bool is_a_int(string str)
-{
-  try
-  {
-    int l = stoi(str);
-    return true;
-  }
-  catch (const exception& e)
-  {
-    return false;
-  }
-}
 
 int main(int argc, char* argv[])
 {
@@ -323,7 +140,38 @@ int main(int argc, char* argv[])
       }
       else
       {
-        string_literal = remove(str_parts, "'");
+	vector<string> token_string = {};
+	string current_string_token = "";
+	for (int i =0; i<split(remove(str_parts, "'")).size(); i++)
+	{
+		current_string_token = split(remove(str_parts, "'"))[i];
+
+		if (current_string_token[0] == *"$")
+		{
+			string possible_var_name = "";
+			for (int n = 1; n<current_string_token.size(); n++)
+			{
+				possible_var_name+=current_string_token[n];
+			}
+
+			if (Ivariables.count(possible_var_name)>0)
+			{
+				string_literal += to_string(Ivariables[possible_var_name]) + " ";
+			}
+			else if (Svariables.count(possible_var_name)>0)
+			{
+				string_literal += Svariables[possible_var_name] + " ";
+			}
+			else 
+			{
+				throw runtime_error(possible_var_name + " n'est pas une variable connue.");
+			}
+		}
+		else
+		{
+		       	string_literal += current_string_token + " ";
+		}
+	}		
       }
       cout << string_literal << endl;
     }
@@ -536,6 +384,6 @@ int main(int argc, char* argv[])
   auto stop = high_resolution_clock::now();
   auto duration = duration_cast<microseconds>(stop - start);
   cout << "\n";
-  cout << "Programe executer en " << duration.count()/1000000 << " secondes"<< endl;
+  cout << "Programe executer en " << duration.count()/1000 << " milisecondes"<< endl;
   return 0;
 }
