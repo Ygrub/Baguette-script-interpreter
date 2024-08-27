@@ -36,6 +36,161 @@ vector<string> split(string line, const char* token = " ")
 	
 
 }
+bool is_a_int(const string str)
+{
+	try
+	{
+		int l = stoi(str);
+		return true;
+	}
+	catch (const exception& e)
+	{
+		return false;
+	}
+}
+
+bool evaluate_simple_condition(string lhs, string op, string rhs, map<string, int>& Ivariables, map<string, string>& Svariables)
+{
+    int lhs_value;
+    int rhs_value;
+
+    // Evaluate LHS
+	if (is_a_int(lhs))
+    {
+        lhs_value = stoi(lhs);
+    }
+	if (is_a_int(rhs))
+    {
+        lhs_value = stoi(lhs);
+    }
+
+
+    // Evaluate the condition
+    if (op == "=") return lhs_value == rhs_value;
+    if (op == "<") return lhs_value < rhs_value;
+    if (op == ">") return lhs_value > rhs_value;
+    if (op == "<=") return lhs_value <= rhs_value;
+    if (op == ">=") return lhs_value >= rhs_value;
+	if (op == "!=") return lhs_value != rhs_value;
+
+    throw runtime_error("Unknown operator: " + op);
+}
+
+bool evaluate_condition(string condition, map<string, int>& Ivariables, map<string, string>& Svariables) {
+    stringstream ss(condition);
+    string token;
+    vector<string> conditions;
+    vector<string> operators;
+
+    // Parse condition into individual expressions and operators
+    while (ss >> token) {
+        if (token == "et" || token == "ou" || token == "xou") {
+            operators.push_back(token);
+        } else {
+            conditions.push_back(token);
+        }
+    }
+
+    // Evaluate the first condition
+    string lhs, op, rhs;
+
+	
+    stringstream cond_ss(conditions[0]);
+	lhs = conditions[0];
+    op = conditions[1];
+	rhs = conditions[2];
+
+	if (Ivariables.count(lhs))
+	{
+		lhs = to_string(Ivariables[lhs]);
+	}
+	else if (Svariables.count(lhs))
+	{
+		lhs = Svariables[lhs];
+	}
+	if (Ivariables.count(rhs))
+	{
+		rhs = to_string(Ivariables[rhs]);
+	}
+	else if (Svariables.count(lhs))
+	{
+		lhs = Svariables[lhs];
+	}
+
+    bool result = evaluate_simple_condition(lhs, op, rhs, Ivariables, Svariables);
+    // Evaluate subsequent conditions
+	//cout << condition << endl;
+	/*
+	if (conditions.size()>3)
+	{
+		
+		for (int i = 0; i < conditions.size(); i+=4) 
+		{
+		
+        	stringstream cond_ss(conditions[i]);
+			lhs = conditions[i];
+		    op = conditions[i+1];
+			rhs = conditions[i+2];
+			if (Ivariables.count(lhs))
+			{
+				lhs = to_string(Ivariables[lhs]);
+			}
+			else if (Svariables.count(lhs))
+			{
+				lhs = Svariables[lhs];
+			}
+			if (Ivariables.count(rhs))
+			{
+				rhs = to_string(Ivariables[rhs]);
+			}
+			else if (Svariables.count(lhs))
+			{
+				lhs = Svariables[lhs];
+			}
+			bool result = evaluate_simple_condition(lhs, op, rhs, Ivariables, Svariables);
+			
+
+			lhs = conditions[i+3];
+	    	op = conditions[i+4];
+			rhs = conditions[i+5];
+			
+			if (Ivariables.count(lhs))
+			{
+				lhs = to_string(Ivariables[lhs]);
+			}
+			else if (Svariables.count(lhs))
+			{
+
+				lhs = Svariables[lhs];
+			}
+			if (Ivariables.count(rhs))
+			{
+				rhs = to_string(Ivariables[rhs]);
+			}
+			else if (Svariables.count(lhs))
+			{
+				lhs = Svariables[lhs];
+			}
+    	    bool current_result = evaluate_simple_condition(lhs, op, rhs, Ivariables, Svariables);
+
+        	if (operators[i] == "et") 
+			{
+            	result = result && current_result;
+        	} 
+			else if (operators[i] == "ou") 
+			{
+            	result = result || current_result;
+    	    } 
+			else if (operators[i] == "xou") 
+			{
+            	result = (result != current_result);  // XOR: true if one is true and the other is false
+        	}
+    	}
+	}*/
+    return result;
+}
+
+
 
 
 bool isOperator(char c)
@@ -56,18 +211,7 @@ bool is_valid_str(const string str)
 	return num == 2;
 }
 
-bool is_a_int(const string str)
-{
-	try
-	{
-		int l = stoi(str);
-		return true;
-	}
-	catch (const exception& e)
-	{
-		return false;
-	}
-}
+
 
 int calculate(int a, int b, char op)
 {

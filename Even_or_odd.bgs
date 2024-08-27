@@ -1,25 +1,34 @@
-lire int input_num
-
-int num = input_num
 
 
-loop:
+int og_num = 10000
+int num = og_num
+int Z = 0
 
-num = num - 2
+fonction loop:
 
-si num > 0 loop
-si num = 0 even
+    num = num - 2
+    afficher num
+    si num > Z
+        loop
+        finsi
+    si num = Z
+        even
+        finsi
 
-afficher 'Le chiffre $input_num  est impaire !'
+    afficher 'Le chiffre $og_num  est impaire !'
+    stop
+    finfonc
 
-stop
 
-si num > 0 loop
 
-even:
-afficher 'Le chiffre $input_num est paire !'
-stop
+fonction even:
 
+    afficher 'Le chiffre $og_num est paire !'
+    stop
+    finfonc
+
+
+loop
 
 
 stop

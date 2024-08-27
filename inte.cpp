@@ -1,6 +1,18 @@
 #include "basicFunc.h"
+#include <cmath>
+#include <ctime>
+#include<algorithm>
 
-
+vector<string> del_white(vector<string> tokens) {
+  vector<string> result = {};
+  for (const string& token : tokens) {
+    if (!token.empty()) {
+      result.push_back(token);
+      //cout << token << "#" << endl;
+    }
+  }
+  return result;
+}
 
 int main(int argc, char* argv[])
 {
@@ -19,33 +31,74 @@ int main(int argc, char* argv[])
 
   while (getline(program_file, line))
   {
-      program.push_back(line);
+    program.push_back(line);
   }
   program_file.close();
 
   map<string, int> Ivariables;
   map<string, string> Svariables;
+  map<string, int> fonctions;
   string string_literal;
   int number;
   int pc = 0;
   string opcode;
   vector<string> tokens = {};
   auto start = high_resolution_clock::now();
-  while (program[pc] != "stop")
+  vector<int> old_pc = {};
+  while (split(program[pc])[split(program[pc]).size()-1] != "stop")
   {
-
+	
     opcode = program[pc];
-    tokens =  split(opcode);
-    if (opcode[opcode.size()-1] == *":")
+    //cout << opcode << endl;
+    tokens =  del_white(split(opcode));
+    while (tokens.empty())
     {
-      while (program[pc] != "stop")
-      {
-        pc++;
-      }
       pc++;
+      opcode = program[pc];
+      tokens =  del_white(split(opcode));
     }
-    else if (tokens[0] == "int")
+   
+    //cout << tokens[0] << " " << tokens[tokens.size()-1].find(":") << endl;
+
+    //cout << opcode << " " << pc << endl;
+    //cout << tokens[tokens.size()-1] << endl;
+    if (fonctions.count(tokens[tokens.size()-1])>0)
     {
+      //cout << pc << " c" << endl;
+      old_pc.push_back(pc);
+      pc = fonctions[tokens[tokens.size()-1]];
+      
+    } 
+
+    else if (opcode == "finfonc")
+    {
+      //cout << pc << " f0" << endl;
+      pc = old_pc[old_pc.size()-1];
+      //cout << pc << " f1" << endl;
+      old_pc.pop_back();
+    //cout << pc << " f2" << endl;
+    }
+  
+    else if (tokens[0] == "fonction")
+    {
+      fonctions[split(tokens[1], ":")[0]] = pc+1;
+      //cout << split(tokens[1], ":")[0] + " " << pc+1 << endl;
+      while ((program[pc].find("finfonc") != 1))
+      {
+      
+      pc++;
+      if (pc > program.size())
+      {
+        throw runtime_error("Erreur ligne " + to_string(fonctions[split(tokens[1], ":")[0]]) + " la fonciton " + split(tokens[1], ":")[0] + " doit être fermé par 'finfonc'");
+      }
+      if (program[pc].find("finfonc") < 934287)
+      {
+        break;
+      }
+    }
+  }
+  else if (tokens[0] == "int")
+   {
       if (tokens[2] == "=")
       {
         if (Ivariables.count(tokens[3])>0)
@@ -56,7 +109,17 @@ int main(int argc, char* argv[])
         {
           Ivariables[tokens[1]] = stoi(tokens[3]);
         }
-        else
+	else if (tokens[3] == "haz!")
+	{
+		auto a1 = high_resolution_clock::now();
+		int a = duration_cast<nanoseconds>(a1.time_since_epoch()).count();
+		auto b1 = high_resolution_clock::now();
+		int b = duration_cast<nanoseconds>(a1.time_since_epoch()).count();
+		auto c1 = high_resolution_clock::now();
+		int c = duration_cast<nanoseconds>(a1.time_since_epoch()).count();
+		Ivariables[tokens[1]] = round(a*b/(c/10));
+	}
+	else
         {
           throw runtime_error(tokens[2] + " n'est pas valide pour une variable de type 'int'.");
         }
@@ -123,9 +186,10 @@ int main(int argc, char* argv[])
     }
 
 
-    else if (tokens[0] == "afficher")
+    else if (opcode.find("afficher") < 10000000)
     {
       string str_parts = "";
+      string string_literal = "";
       for (int i = 1; i < tokens.size(); i++)
       {
         str_parts+=tokens[i] + " ";
@@ -169,7 +233,7 @@ int main(int argc, char* argv[])
 		}
 		else
 		{
-		       	string_literal += current_string_token + " ";
+		  string_literal += current_string_token + " ";
 		}
 	}		
       }
@@ -197,186 +261,37 @@ int main(int argc, char* argv[])
       }
     }
 
-    else if (tokens[0] == "si")
+    else if (opcode.find("si") < 139485708947 && tokens.size() > 1 && opcode.find("finsi") > 1343254245)
     {
-      vector<string> current_comparaison = tokens;
-      if (Ivariables.count(current_comparaison[1]))
+      // Extract the condition expression
+      string condition = "";
+      int starting_index = 0;
+      for (int i = 0; i < tokens.size(); i++)
       {
-        if (current_comparaison[2] == "=")
+        if (tokens[i] == "si")
         {
-          if (Ivariables.count(current_comparaison[3]))
-          {
-            if (Ivariables[current_comparaison[1]] == Ivariables[current_comparaison[3]])
-            {
-              pc = get_lt(program, current_comparaison[4]);
-            }
-          }
-          else
-          {
-            if (Ivariables[current_comparaison[1]] == stoi(current_comparaison[3]))
-            {
-              pc = get_lt(program, current_comparaison[4]);
-            }
-          }
-        }
-        else if (current_comparaison[2] == ">")
-        {
-          if (Ivariables.count(current_comparaison[3]))
-          {
-            if (Ivariables[current_comparaison[1]] > Ivariables[current_comparaison[3]])
-            {
-              pc = get_lt(program, current_comparaison[4]);
-            }
-          }
-          else
-          {
-            if (Ivariables[current_comparaison[1]] > stoi(current_comparaison[3]))
-            {
-              pc = get_lt(program, current_comparaison[4]);
-            }
-          }
-        }
-        else if (current_comparaison[2] == "<")
-        {
-          if (Ivariables.count(current_comparaison[3]))
-          {
-            if (Ivariables[current_comparaison[1]] < Ivariables[current_comparaison[3]])
-            {
-              pc = get_lt(program, current_comparaison[4]);
-            }
-          }
-          else
-          {
-            if (Ivariables[current_comparaison[1]] < stoi(current_comparaison[3]))
-            {
-              pc = get_lt(program, current_comparaison[4]);
-            }
-          }
-        }
-        else if (current_comparaison[2] == ">=")
-        {
-          if (Ivariables.count(current_comparaison[3]))
-          {
-            if (Ivariables[current_comparaison[1]] >= Ivariables[current_comparaison[3]])
-            {
-              pc = get_lt(program, current_comparaison[4]);
-            }
-          }
-          else
-          {
-            if (Ivariables[current_comparaison[1]] >= stoi(current_comparaison[3]))
-            {
-              pc = get_lt(program, current_comparaison[4]);
-            }
-          }
-        }
-        else if (current_comparaison[2] == "<=")
-        {
-          if (Ivariables.count(current_comparaison[3]))
-          {
-            if (Ivariables[current_comparaison[1]] <= Ivariables[current_comparaison[3]])
-            {
-              pc = get_lt(program, current_comparaison[4]);
-            }
-          }
-          else
-          {
-            if (Ivariables[current_comparaison[1]] <= stoi(current_comparaison[3]))
-            {
-              pc = get_lt(program, current_comparaison[4]);
-            }
-          }
+          starting_index = i + 1;
+          break;
         }
       }
-      else
+      for (int i = starting_index; i < tokens.size(); i++)
       {
-        if (current_comparaison[2] == "=")
+        condition += tokens[i] + " ";
+      }
+      
+      // Evaluate the condition expression
+      bool result = evaluate_condition(condition, Ivariables, Svariables);
+
+      // Execute the block if the condition is true
+      if (!result)
+      {
+        while (program[pc].find("finsi") > 109483)
         {
-          if (Ivariables.count(current_comparaison[3]))
-          {
-            if (stoi(current_comparaison[1]) == Ivariables[current_comparaison[3]])
-            {
-              pc = get_lt(program, current_comparaison[4]);
-            }
-          }
-          else
-          {
-            if (stoi(current_comparaison[1]) == stoi(current_comparaison[3]))
-            {
-              pc = get_lt(program, current_comparaison[4]);
-            }
-          }
-        }
-        else if (current_comparaison[2] == ">")
-        {
-          if (Ivariables.count(current_comparaison[3]))
-          {
-            if (stoi(current_comparaison[1]) > Ivariables[current_comparaison[3]])
-            {
-              pc = get_lt(program, current_comparaison[4]);
-            }
-          }
-          else
-          {
-            if (stoi(current_comparaison[1]) > stoi(current_comparaison[3]))
-            {
-              pc = get_lt(program, current_comparaison[4]);
-            }
-          }
-        }
-        else if (current_comparaison[2] == "<")
-        {
-          if (Ivariables.count(current_comparaison[3]))
-          {
-            if (stoi(current_comparaison[1]) < Ivariables[current_comparaison[3]])
-            {
-              pc = get_lt(program, current_comparaison[4]);
-            }
-          }
-          else
-          {
-            if (stoi(current_comparaison[1]) < stoi(current_comparaison[3]))
-            {
-              pc = get_lt(program, current_comparaison[4]);
-            }
-          }
-        }
-        else if (current_comparaison[2] == ">=")
-        {
-          if (Ivariables.count(current_comparaison[3]))
-          {
-            if (stoi(current_comparaison[1]) >= Ivariables[current_comparaison[3]])
-            {
-              pc = get_lt(program, current_comparaison[4]);
-            }
-          }
-          else
-          {
-            if (stoi(current_comparaison[1]) >= stoi(current_comparaison[3]))
-            {
-              pc = get_lt(program, current_comparaison[4]);
-            }
-          }
-        }
-        else if (current_comparaison[2] == "<=")
-        {
-          if (Ivariables.count(current_comparaison[3]))
-          {
-            if (stoi(current_comparaison[1]) <= Ivariables[current_comparaison[3]])
-            {
-              pc = get_lt(program, current_comparaison[4]);
-            }
-          }
-          else
-          {
-            if (stoi(current_comparaison[1]) <= stoi(current_comparaison[3]))
-            {
-              pc = get_lt(program, current_comparaison[4]);
-            }
-          }
+          pc++;
         }
       }
     }
+
 
     pc++;
     //cout << pc << "/" << program.size()<< endl;
