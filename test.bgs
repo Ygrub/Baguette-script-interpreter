@@ -1,0 +1,15 @@
+ent test = 3+2*2
+afficher test
+car test2 = 'coucou'
+test = 69
+afficher test2
+afficher test
+test2 = 'LOL$'
+afficher test2
+
+si test != 69
+    afficher 'ok'
+    si 1 < 2
+        afficher 'ok2'
+    finsi
+finsi

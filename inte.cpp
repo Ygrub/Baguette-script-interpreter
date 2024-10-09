@@ -1,22 +1,9 @@
 #include "basicFunc.h"
-#include <cmath>
-#include <ctime>
-#include<algorithm>
 
-vector<string> del_white(vector<string> tokens) {
-  vector<string> result = {};
-  for (const string& token : tokens) {
-    if (!token.empty()) {
-      result.push_back(token);
-      //cout << token << "#" << endl;
-    }
-  }
-  return result;
-}
+
 
 int main(int argc, char* argv[])
 {
-
 
   ifstream program_file(argv[1]);
 
@@ -40,18 +27,66 @@ int main(int argc, char* argv[])
   map<string, int> fonctions;
   string string_literal;
   int number;
-  int pc = 0;
+
   string opcode;
   vector<string> tokens = {};
   auto start = high_resolution_clock::now();
   vector<int> old_pc = {};
+  vector<vector<string>> program_content = {{}};
+
+  for (auto n : program)
+  {
+    if (!n.empty()) program_content.push_back(make_token(n, Ivariables, Svariables));
+  }
+  
+  vector<string> program_line = {};
+
+  for (int line_num = 0; line_num<program_content.size(); line_num++)
+  {
+    program_line = program_content[line_num];
+    if (program_line.empty()) continue;
+    if (program_line[0][0] == *"#") continue;
+    string token = program_line[0];
+
+    if (token == "afficher") afficher(program_line, Ivariables, Svariables, line_num);
+    else if (token == "ent") Ivariables[get_var_name(program_line, line_num)] = assigner_int(program_line, Ivariables, line_num);
+    else if (token == "car") Svariables[get_var_name(program_line, line_num)] = assigner_str(program_line, Svariables, line_num);
+    else if (Ivariables.count(token)) Ivariables[token] = assigner_int(program_line, Ivariables, line_num);
+    else if (Svariables.count(token)) Svariables[token] = assigner_str(program_line, Svariables, line_num);
+    else if (token == "si")
+    {
+      if (!evaluateComparison(program_line, Ivariables, Svariables, line_num))
+      {
+        int num_of_if = 0;
+        int of_finsi = 0;
+        for (int new_line_num = line_num; new_line_num<program_content.size(); new_line_num++)
+        {
+          program_line = program_content[new_line_num];
+          if (program_line.empty()) continue;
+          if (program_line[0][0] == *"#") continue;
+          string token = program_line[0];
+          if (token == "si") num_of_if ++;
+          else if (token == "finsi") of_finsi ++;
+          if (num_of_if == of_finsi)
+          {
+            line_num = new_line_num;
+            break;
+          }
+        }
+      }
+    }
+    else if (token == "finsi") continue;
+    else throw runtime_error("Erreur à la ligne " + to_string(line_num+1) + ".\n" + token + " n'est pas un mot clef connu.");
+
+  }
+  /*
   while (split(program[pc])[split(program[pc]).size()-1] != "stop")
   {
 	
     opcode = program[pc];
     //cout << opcode << endl;
     tokens =  del_white(split(opcode));
-    while (tokens.empty())
+    while (tokens.empty() || opcode.find("finsi")==1 || opcode.find("finfonc")==1 )
     {
       pc++;
       opcode = program[pc];
@@ -64,67 +99,72 @@ int main(int argc, char* argv[])
     //cout << tokens[tokens.size()-1] << endl;
     if (fonctions.count(tokens[tokens.size()-1])>0)
     {
-      //cout << pc << " c" << endl;
+      cout << pc << " c" << endl;
       old_pc.push_back(pc);
-      pc = fonctions[tokens[tokens.size()-1]];
+      pc = fonctions[tokens[tokens.size()-1]]+1;
       
     } 
 
-    else if (opcode == "finfonc")
+    else if (opcode.find("finfonc") == 1)
     {
       //cout << pc << " f0" << endl;
+      cout << pc << endl;
       pc = old_pc[old_pc.size()-1];
+      cout << "$" << pc << endl;
       //cout << pc << " f1" << endl;
       old_pc.pop_back();
+      
     //cout << pc << " f2" << endl;
     }
   
     else if (tokens[0] == "fonction")
     {
-      fonctions[split(tokens[1], ":")[0]] = pc+1;
+      string fonctions_name = minus_the_end(tokens[1]);
+      string fonciton_content = "";
+      fonctions[split(tokens[1], ":")[0]] = pc;
       //cout << split(tokens[1], ":")[0] + " " << pc+1 << endl;
       while ((program[pc].find("finfonc") != 1))
       {
       
-      pc++;
-      if (pc > program.size())
-      {
-        throw runtime_error("Erreur ligne " + to_string(fonctions[split(tokens[1], ":")[0]]) + " la fonciton " + split(tokens[1], ":")[0] + " doit être fermé par 'finfonc'");
+        pc++;
+        if (pc > program.size())
+        {
+          throw runtime_error("Erreur ligne " + to_string(fonctions[split(tokens[1], ":")[0]]) + " la fonciton " + split(tokens[1], ":")[0] + " doit être fermé par 'finfonc'");
+        }
+        if (program[pc].find("finfonc") < 934287)
+        {
+          break;
+        }
       }
-      if (program[pc].find("finfonc") < 934287)
-      {
-        break;
-      }
+    }
+    else if (tokens[0] == "int")
+    {
+        if (tokens[2] == "=")
+        {
+          if (Ivariables.count(tokens[3])>0)
+          {
+          Ivariables[tokens[1]] = Ivariables[tokens[3]];
+          }
+          else if (is_a_int(tokens[3]))
+          {
+            Ivariables[tokens[1]] = stoi(tokens[3]);
+          }
+  	else if (tokens[3] == "haz!")
+  	{
+	  	auto a1 = high_resolution_clock::now();
+		  int a = duration_cast<nanoseconds>(a1.time_since_epoch()).count();
+  		auto b1 = high_resolution_clock::now();
+	  	int b = duration_cast<nanoseconds>(a1.time_since_epoch()).count();
+		  auto c1 = high_resolution_clock::now();
+  		int c = duration_cast<nanoseconds>(a1.time_since_epoch()).count();
+	  	Ivariables[tokens[1]] = round(a*b/(c/10));
+	  }
+	  else
+    {
+      throw runtime_error(tokens[2] + " n'est pas valide pour une variable de type 'int'.");
+    }
     }
   }
-  else if (tokens[0] == "int")
-   {
-      if (tokens[2] == "=")
-      {
-        if (Ivariables.count(tokens[3])>0)
-        {
-          Ivariables[tokens[1]] = Ivariables[tokens[3]];
-        }
-        else if (is_a_int(tokens[3]))
-        {
-          Ivariables[tokens[1]] = stoi(tokens[3]);
-        }
-	else if (tokens[3] == "haz!")
-	{
-		auto a1 = high_resolution_clock::now();
-		int a = duration_cast<nanoseconds>(a1.time_since_epoch()).count();
-		auto b1 = high_resolution_clock::now();
-		int b = duration_cast<nanoseconds>(a1.time_since_epoch()).count();
-		auto c1 = high_resolution_clock::now();
-		int c = duration_cast<nanoseconds>(a1.time_since_epoch()).count();
-		Ivariables[tokens[1]] = round(a*b/(c/10));
-	}
-	else
-        {
-          throw runtime_error(tokens[2] + " n'est pas valide pour une variable de type 'int'.");
-        }
-      }
-    }
 
     else if (tokens[0] == "str")
     {
@@ -295,7 +335,7 @@ int main(int argc, char* argv[])
 
     pc++;
     //cout << pc << "/" << program.size()<< endl;
-  }
+  }*/
   auto stop = high_resolution_clock::now();
   auto duration = duration_cast<microseconds>(stop - start);
   cout << "\n";
